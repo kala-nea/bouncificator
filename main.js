@@ -51,19 +51,19 @@ Ball.prototype.update = function() {
   }
 
   if (this.velY >= 2) {
-    this.velY -= (0.25 * this.velY);
+    this.velY -= (0.25 * Math.abs(this.velY));
   }
 
   if (this.velX >= 2) {
-    this.velX -= (0.25 * this.velX);
+    this.velX -= (0.25 * Math.abs(this.velX));
   }
 
   if (this.velY <= -2) {
-    this.velY += (0.25 * this.velY);
+    this.velY += (0.25 * Math.abs(this.velY));
   }
 
   if (this.velX <= -2) {
-    this.velX += (0.25 * this.velX);
+    this.velX += (0.25 * Math.abs(this.velX));
   }
 
   this.x += this.velX;
@@ -91,37 +91,38 @@ while (balls.length < 25) {
 Ball.prototype.collisionDetect = function() {
   for (let j = 0; j < balls.length; j++) {
     if (!(this === balls[j])) {
-      const dx = this.x - balls[j].x;
-      const dy = this.y - balls[j].y;
+      const dx = 1 + this.x - balls[j].x;
+      const dy = 1 + this.y - balls[j].y;
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < this.size + balls[j].size) {
-        let lastVelx1 = this.velX;
-        let lastVelx2 = balls[j].velX;
 
-        let lastVely1 = this.velY;
-        let lastVely2 = balls[j].velY;
+        let avgVelX = (Math.abs(this.velX) + Math.abs(balls[j].velX)) / 2;
+        let avgVelY = (Math.abs(this.velY) + Math.abs(balls[j].velY)) / 2;
         
-        this.velX = lastVelx2;
-        this.velY = lastVely2;
+        if (this.velX > 0) {
+          this.VelX = -1 * (avgVelX - (1 / this.size));
+        } else if (this.velX < 0) {
+          this.VelX = (avgVelX - (1 / this.size));
+        }
 
-        balls[j].velX = lastVelx1;
-        balls[j].velY = lastVely1;
-        
-        // let dSize = this.size - balls[j].size;
+        if (this.velY > 0) {
+          this.VelY = -1 * (avgVelY - (1 / this.size));
+        } else if (this.velY < 0) {
+          this.VelY = (avgVelY - (1 / this.size));
+        }
 
-        // let tSize = 0;
+        if (balls[j].velX > 0) {
+          balls[j].VelX = -1 * (avgVelX - (1 / balls[j].size));
+        } else if (balls[j].velX < 0) {
+          balls[j].VelX = (avgVelX - (1 / balls[j].size));
+        }
 
-        // for (let k; k < balls.length; k++) {
-        //   tSize = tSize + balls[k].size;
-        // }
-
-        // let avgSize = tSize / balls.length;
-
-        // if (dSize >= avgSize) {
-        //   this.size = this.size + balls[j].size;
-        //   balls.splice(j, 1);
-        // }
+        if (balls[j].velY > 0) {
+          balls[j].VelY = -1 * (avgVelY - (1 / balls[j].size));
+        } else if (balls[j].velY < 0) {
+          balls[j].VelY = (avgVelY - (1 / balls[j].size));
+        }
       }
 
       let gAccel = -5 * ((balls[j].size) / (distance * distance));
