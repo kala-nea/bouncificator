@@ -31,35 +31,39 @@ Ball.prototype.draw = function() {
 
 Ball.prototype.update = function() {
   if ((this.x + this.size) >= width) {
-    this.velX = -(this.velX + 0.5);
+    this.velX = -(this.velX - 0.5);
+    this.x = width - this.size - 1;
   }
 
   if ((this.x - this.size) <= 0) {
-    this.velX = -(this.velX - 0.5);
+    this.velX = (this.velX + 0.5);
+    this.x = this.size + 1;
   }
 
   if ((this.y + this.size) >= height) {
-    this.velY = -(this.velY + 0.5);
+    this.velY = -(this.velY - 0.5);
+    this.y = height - this.size - 1;
   }
 
   if ((this.y - this.size) <= 0) {
-    this.velY = -(this.velY - 0.5);
+    this.velY = (this.velY + 0.5);
+    this.y = this.size + 1;
   }
 
-  if (this.velY >= 5) {
-    this.velY -= 0.5;
+  if (this.velY >= 2) {
+    this.velY -= (0.25 * this.velY);
   }
 
-  if (this.velX >= 5) {
-    this.velX -= 0.5;
+  if (this.velX >= 2) {
+    this.velX -= (0.25 * this.velX);
   }
 
-  if (this.velY <= -5) {
-    this.velY += 0.5;
+  if (this.velY <= -2) {
+    this.velY += (0.25 * this.velY);
   }
 
-  if (this.velX <= -5) {
-    this.velX += 0.5;
+  if (this.velX <= -2) {
+    this.velX += (0.25 * this.velX);
   }
 
   this.x += this.velX;
@@ -103,13 +107,24 @@ Ball.prototype.collisionDetect = function() {
 
         balls[j].velX = lastVelx1;
         balls[j].velY = lastVely1;
+        
+        // let dSize = this.size - balls[j].size;
+
+        // let tSize = 0;
+
+        // for (let k; k < balls.length; k++) {
+        //   tSize = tSize + balls[k].size;
+        // }
+
+        // let avgSize = tSize / balls.length;
+
+        // if (dSize >= avgSize) {
+        //   this.size = this.size + balls[j].size;
+        //   balls.splice(j, 1);
+        // }
       }
 
-      if (distance == 0) {
-        balls[j].pop;
-      }
-
-      let gAccel = -1 * (balls[j].size) / (distance * distance);
+      let gAccel = -5 * ((balls[j].size) / (distance * distance));
       let angle = Math.atan2(dy - ((5 * Math.random()) - 2.5), dx - ((5 * Math.random()) - 2.5));
       let xGAccel = gAccel * Math.cos(angle);
       let yGAccel = gAccel * Math.sin(angle);
@@ -134,4 +149,3 @@ function loop() {
 }
 
 loop();
-
