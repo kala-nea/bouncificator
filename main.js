@@ -213,19 +213,19 @@ class Ball {
     }
 
     if (this.velY >= 2) {
-      this.velY -= (0.25 * Math.abs(this.velY));
+      this.velY -= (0.1 * Math.abs(this.velY));
     }
   
     if (this.velX >= 2) {
-      this.velX -= (0.25 * Math.abs(this.velX));
+      this.velX -= (0.1 * Math.abs(this.velX));
     }
   
     if (this.velY <= -2) {
-      this.velY += (0.25 * Math.abs(this.velY));
+      this.velY += (0.1 * Math.abs(this.velY));
     }
   
     if (this.velX <= -2) {
-      this.velX += (0.25 * Math.abs(this.velX));
+      this.velX += (0.1 * Math.abs(this.velX));
     }
 
     this.x += this.velX;
@@ -236,23 +236,17 @@ class Ball {
     }
 
     if (popCheck == true) {
+      let totalSize = 0;
+      for (let i; i < balls.length; i++) {
+        totalSize += balls[i].size;
+      }
+
+      let totalBalls = balls.length;
+
       while (balls.length < 20) {
-        ballmake(5, 35);
+        ballmake(totalSize / totalBalls, totalSize / totalBalls);
       }
     }
-
-    let centerX = width / 2;
-    let centerY = height / 2;
-
-    let angle1 = 0.0025;
-    let dx1 = this.x - centerX;
-    let dy1 = this.y - centerY;
-
-    let newX = dx1 * Math.cos(angle1) - dy1 * Math.sin(angle1);
-    let newY = dx1 * Math.sin(angle1) + dy1 * Math.cos(angle1);
-
-    this.x = newX + centerX;
-    this.y = newY + centerY;
   }
 
   collisionDetect() {
@@ -260,10 +254,10 @@ class Ball {
       if (this !== balls[j]) {
         let dx = this.x - balls[j].x;
         let dy = this.y - balls[j].y;
-        let distance = Math.sqrt(dx * dx + dy * dy) + 1;
+        let distance = Math.sqrt(dx * dx + dy * dy);
 
         let gAccel = -this.gConst * (balls[j].size / (distance * distance));
-        let angle = Math.atan2(dy - ((5 * Math.random()) - 2.5), dx - ((5 * Math.random()) - 2.5));
+        let angle = Math.atan2(dy, dx);
         let xGAccel = gAccel * Math.cos(angle);
         let yGAccel = gAccel * Math.sin(angle);
 
@@ -272,20 +266,27 @@ class Ball {
 
         if (distance <= this.size + balls[j].size) {
           if (this.size > balls[j].size) {
-            this.size += balls[j].size / 25;
-            balls[j].size -= balls[j].size / 25;
+            this.size += balls[j].size / 10;
+            balls[j].size -= balls[j].size / 10;
             let lastInit = this.initSize;
-            if (lastInit < balls[j].size * 0.75) {
-              if (this.size > 5) {
-                this.initSize = balls[j].size * 0.75;
-              } else {
-                this.initSize += balls[j].size / 100;
-              }
+            if (lastInit < balls[j].size * 0.5) {
+              this.initSize = balls[j].size * 0.5;
+            } else {
+              this.initSize += balls[j].size / 100;
             }
           }
+
+          this.velX = -this.velX;
+          this.velY = -this.velY;
+
+          balls[j].velX = -balls[j].velX;
+          balls[j].velY = -balls[j].velY;
+
+          console.log("Ball " + j + " Collided");
         }
 
-        if (balls[j].size < 1) {
+        if (balls[j].size < 2.5) {
+          let lastSize = balls[j].initSize;
           this.size += balls[j].size;
           balls.splice(j, 1);
           if (balls.length < 6) {
@@ -293,13 +294,13 @@ class Ball {
           }
           let chance = random(0, 7);
           if (chance >= 2 && chance < 6) {
-            ballmake(10, 40);
+            ballmake(lastSize, lastSize);
           } else if (chance >= 7) {
-            ballmake(10, 35);
-            ballmake(10, 35);
+            ballmake(lastSize / 2, lastSize / 2);
+            ballmake(lastSize / 2, lastSize / 2);
           }
-        } else if (balls[j].size < 5) {
-          balls[j].gConst = 8;
+        } else if (balls[j].size < 7.5) {
+          balls[j].gConst = 10;
         }
       }
     }
@@ -329,7 +330,7 @@ function ballmake(min, max) {
 }
 
 for (let i = 0; i < 25; i++) {
-  ballmake(5, 30);
+  ballmake(7.5, 30);
 }
 
 function checkBallSize() {
@@ -339,24 +340,13 @@ function checkBallSize() {
     let ball = balls[i];
 
     if (ball.size > width / 2 || ball.size > height / 2) {
+      let latestSize = ball.size;
       balls.splice(i, 1);
 
       let numNewBalls = random(10, 20);
 
       for (let j = 0; j < numNewBalls; j++) {
-        let size = random(5, 35);
-        let newBall = new Ball(
-          random(0 + size, width - size),
-          random(0 + size, height - size),
-          0,
-          0,
-          'rgb(' + random(10, 255) + ',' + random(10, 255) + ',' + random(10, 255) + ')',
-          size,
-          3 * (size / 4),
-          2
-        );
-
-        newBalls.push(newBall);
+        ballmake(latestSize / numNewBalls, latestSize / numNewBalls);
       }
     }
   }
@@ -380,7 +370,25 @@ function loop() {
     balls.splice(0, 30);
   }
 
+  getLargestSize();
+
   requestAnimationFrame(loop);
 }
 
 loop();
+
+
+function getLargestSize () {
+  let lastBall = 0;
+  let greatestIndex = 0;
+
+  for (let i = 0; i < balls.length; i++) {
+    if (lastBall < balls[i].size) {
+      lastBall = balls[i].size;
+      greatestIndex = i;
+    }
+  }
+
+  document.getElementById("sizeDis");
+  sizeDis.textContent = "Ball " + greatestIndex + "'s Size: " + Math.floor(lastBall);
+}
