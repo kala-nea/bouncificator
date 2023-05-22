@@ -170,8 +170,6 @@ function random(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-let popCheck = false;
-
 // Ball object
 class Ball {
   constructor(x, y, velX, velY, color, size, initSize, gConst, index) {
@@ -230,23 +228,6 @@ class Ball {
 
     this.x += this.velX;
     this.y += this.velY;
-
-    if (size > initSize) {
-      this.size -= size / 500;
-    }
-
-    if (popCheck == true) {
-      let totalSize = 0;
-      for (let i; i < balls.length; i++) {
-        totalSize += balls[i].size;
-      }
-
-      let totalBalls = balls.length;
-
-      while (balls.length < 20) {
-        ballmake(totalSize / totalBalls, totalSize / totalBalls);
-      }
-    }
   }
 
   collisionDetect() {
@@ -264,43 +245,30 @@ class Ball {
         this.velX += xGAccel;
         this.velY += yGAccel;
 
+        let lastVelX1 = this.velX;
+        let lastVelY1 = this.velY;
+
+        let lastVelX2 = balls[j].velX;
+        let lastVelY2 = balls[j].velY;
+
         if (distance <= this.size + balls[j].size) {
-          if (this.size > balls[j].size) {
-            this.size += balls[j].size / 10;
-            balls[j].size -= balls[j].size / 10;
-            let lastInit = this.initSize;
-            if (lastInit < balls[j].size * 0.5) {
-              this.initSize = balls[j].size * 0.5;
-            } else {
-              this.initSize += balls[j].size / 100;
-            }
+          if (Math.abs(balls[j].velX) >= 2 || Math.abs(balls[j].velY) >= 2) {
+            this.size = this.size * 0.75;
+            ballmake(this.size, this.size, this.x + this.size + 2, this.y + this.size + 2);
+            this.velX = lastVelX2;
+            this.velY = lastVelY2;
           }
 
-          this.velX = -this.velX;
-          this.velY = -this.velY;
+          this.velX = lastVelX2;
+          this.velY = lastVelY2;
 
-          balls[j].velX = -balls[j].velX;
-          balls[j].velY = -balls[j].velY;
-
-          console.log("Ball " + j + " Collided");
+          balls[j].velX = lastVelX1;
+          balls[j].velY = lastVelY1;
         }
-
-        if (balls[j].size < 2.5) {
-          let lastSize = balls[j].initSize;
-          this.size += balls[j].size;
+        
+        if (distance < this.size) {
+          this.size += balls[j].size / 2;
           balls.splice(j, 1);
-          if (balls.length < 6) {
-            popCheck = true;
-          }
-          let chance = random(0, 7);
-          if (chance >= 2 && chance < 6) {
-            ballmake(lastSize, lastSize);
-          } else if (chance >= 7) {
-            ballmake(lastSize / 2, lastSize / 2);
-            ballmake(lastSize / 2, lastSize / 2);
-          }
-        } else if (balls[j].size < 7.5) {
-          balls[j].gConst = 10;
         }
       }
     }
@@ -310,12 +278,12 @@ class Ball {
 let balls = [];
 let x = 0;
 
-function ballmake(min, max) {
+function ballmake(min, max, x, y) {
   
   let size = random(min, max);
   let ball = new Ball(
-    random(0 + size, width - size),
-    random(0 + size, height - size),
+    x,
+    y,
     0,
     0,
     'rgb(' + random(10, 255) + ',' + random(10, 255) + ',' + random(10, 255) + ')',
@@ -330,35 +298,12 @@ function ballmake(min, max) {
 }
 
 for (let i = 0; i < 25; i++) {
-  ballmake(7.5, 30);
-}
-
-function checkBallSize() {
-  let newBalls = [];
-
-  for (let i = balls.length - 1; i >= 0; i--) {
-    let ball = balls[i];
-
-    if (ball.size > width / 2 || ball.size > height / 2) {
-      let latestSize = ball.size;
-      balls.splice(i, 1);
-
-      let numNewBalls = random(10, 20);
-
-      for (let j = 0; j < numNewBalls; j++) {
-        ballmake(latestSize / numNewBalls, latestSize / numNewBalls);
-      }
-    }
-  }
-
-  balls.push(...newBalls);
+  ballmake(7.5, 30, random(0 + random(7.5, 30), width - random(7.5, 30)), random(0 + random(7.5, 30), height - random(7.5, 30)));
 }
 
 function loop() {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
   ctx.fillRect(0, 0, width, height);
-
-  checkBallSize();
 
   for (let i = 0; i < balls.length; i++) {
     balls[i].draw();
@@ -381,14 +326,18 @@ loop();
 function getLargestSize () {
   let lastBall = 0;
   let greatestIndex = 0;
+  let greatestX = 0;
+  let greatestY = 0;
 
   for (let i = 0; i < balls.length; i++) {
     if (lastBall < balls[i].size) {
-      lastBall = balls[i].size;
+      lastBall = Math.floor(balls[i].size);
       greatestIndex = i;
+      greatestX = Math.floor(balls[i].x);
+      greatestY = Math.floor(balls[i].y);
     }
   }
 
   document.getElementById("sizeDis");
-  sizeDis.textContent = "Ball " + greatestIndex + "'s Size: " + Math.floor(lastBall);
+  sizeDis.textContent = "Largest Ball is Ball " + greatestIndex + " at radius " + lastBall + " and coords " + greatestX + ", " + greatestY;
 }
